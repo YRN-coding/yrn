@@ -1,0 +1,28 @@
+{
+  "name": "run-claude-artifact",
+  "version": "1.0.0",
+  "description": "Run Claude AI artifacts as React applications locally",
+  "type": "module",
+  "bin": {
+    "run-claude-artifact": "./bin/run-claude-artifact.js"
+  },
+  "files": [
+    "bin",
+    "src"
+  ],
+  "dependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "commander": "^12.1.0",
+    "lucide-react": "^0.460.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.3",
+    "vite": "^5.4.10",
+    "vite-plugin-singlefile": "^2.0.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
