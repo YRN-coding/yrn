@@ -1,0 +1,352 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: aquapool/auth-service:latest
+          ports:
+            - containerPort: 3001
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: aquapool/user-service:latest
+          ports:
+            - containerPort: 3002
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wallet-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: wallet-service
+  template:
+    metadata:
+      labels:
+        app: wallet-service
+    spec:
+      containers:
+        - name: wallet-service
+          image: aquapool/wallet-service:latest
+          ports:
+            - containerPort: 3003
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3003
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: market-data-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: market-data-service
+  template:
+    metadata:
+      labels:
+        app: market-data-service
+    spec:
+      containers:
+        - name: market-data-service
+          image: aquapool/market-data-service:latest
+          ports:
+            - containerPort: 3004
+            - containerPort: 3005
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3004
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: exchange-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: exchange-service
+  template:
+    metadata:
+      labels:
+        app: exchange-service
+    spec:
+      containers:
+        - name: exchange-service
+          image: aquapool/exchange-service:latest
+          ports:
+            - containerPort: 3005
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3005
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remittance-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: remittance-service
+  template:
+    metadata:
+      labels:
+        app: remittance-service
+    spec:
+      containers:
+        - name: remittance-service
+          image: aquapool/remittance-service:latest
+          ports:
+            - containerPort: 3006
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3006
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: earn-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: earn-service
+  template:
+    metadata:
+      labels:
+        app: earn-service
+    spec:
+      containers:
+        - name: earn-service
+          image: aquapool/earn-service:latest
+          ports:
+            - containerPort: 3007
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3007
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: compliance-service
+  namespace: aquapool
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: compliance-service
+  template:
+    metadata:
+      labels:
+        app: compliance-service
+    spec:
+      containers:
+        - name: compliance-service
+          image: aquapool/compliance-service:latest
+          ports:
+            - containerPort: 3008
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3008
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+  namespace: aquapool
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: aquapool/notification-service:latest
+          ports:
+            - containerPort: 3009
+          envFrom:
+            - configMapRef:
+                name: aquapool-config
+            - secretRef:
+                name: aquapool-secrets
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3009
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"

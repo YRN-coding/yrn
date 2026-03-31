@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: aquapool_test
+          POSTGRES_USER: aquapool
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+        env:
+          DATABASE_URL: postgresql://aquapool:password@localhost:5432/aquapool_test
+
+      - name: Type check
+        run: npm run type-check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test
+        env:
+          DATABASE_URL: postgresql://aquapool:password@localhost:5432/aquapool_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-do-not-use-in-production
+          NODE_ENV: test
+
+  e2e:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Build web app
+        run: npx turbo run build --filter=@aquapool/web
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000
+          NEXT_PUBLIC_WS_URL: ws://localhost:3005/ws
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: test
+
+      - name: Run E2E tests
+        run: npx playwright test
+        working-directory: apps/web
+        env:
+          PLAYWRIGHT_BASE_URL: http://localhost:3000

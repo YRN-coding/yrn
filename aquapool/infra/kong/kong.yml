@@ -1,0 +1,135 @@
+_format_version: "3.0"
+_transform: true
+
+services:
+  - name: auth-service
+    url: http://auth-service:3001
+    routes:
+      - name: auth-public
+        paths:
+          - /api/v1/auth/register
+          - /api/v1/auth/login
+          - /api/v1/auth/refresh
+          - /api/v1/auth/password
+        methods: [POST]
+      - name: auth-protected
+        paths:
+          - /api/v1/auth
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              key_claim_name: sub
+              claims_to_verify: [exp]
+
+  - name: user-service
+    url: http://user-service:3002
+    routes:
+      - name: user-routes
+        paths: [/api/v1/users]
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: sub
+          claims_to_verify: [exp]
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-User-Id:$(jwt.sub)"
+
+  - name: wallet-service
+    url: http://wallet-service:3003
+    routes:
+      - name: wallet-routes
+        paths: [/api/v1/wallets]
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: sub
+          claims_to_verify: [exp]
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-User-Id:$(jwt.sub)"
+
+  - name: exchange-service
+    url: http://exchange-service:3004
+    routes:
+      - name: exchange-routes
+        paths: [/api/v1/exchange]
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: sub
+          claims_to_verify: [exp]
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-User-Id:$(jwt.sub)"
+
+  - name: market-data-service
+    url: http://market-data-service:3005
+    routes:
+      - name: market-rest
+        paths: [/api/v1/market]
+        strip_path: false
+      - name: market-ws
+        paths: [/ws]
+        protocols: [ws, wss]
+        strip_path: false
+
+  - name: remittance-service
+    url: http://remittance-service:3006
+    routes:
+      - name: remittance-routes
+        paths: [/api/v1/remittance]
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: sub
+          claims_to_verify: [exp]
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-User-Id:$(jwt.sub)"
+
+  - name: earn-service
+    url: http://earn-service:3007
+    routes:
+      - name: earn-routes
+        paths: [/api/v1/earn]
+        strip_path: false
+    plugins:
+      - name: jwt
+        config:
+          key_claim_name: sub
+          claims_to_verify: [exp]
+      - name: request-transformer
+        config:
+          add:
+            headers:
+              - "X-User-Id:$(jwt.sub)"
+
+plugins:
+  - name: rate-limiting
+    config:
+      minute: 100
+      hour: 2000
+      policy: local
+      fault_tolerant: true
+
+  - name: cors
+    config:
+      origins: ["*"]
+      methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+      headers: [Authorization, Content-Type, X-Requested-With]
+      credentials: true
+      max_age: 3600

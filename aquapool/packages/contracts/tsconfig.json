@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "module": "commonjs"
+  },
+  "include": ["hardhat.config.ts", "scripts/**/*.ts", "test/**/*.ts"],
+  "exclude": ["node_modules", "dist", "artifacts", "typechain-types", "cache"]
+}

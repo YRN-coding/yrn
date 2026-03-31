@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/BentE/aquapool/apps/web/**)",
+      "Bash(npm run:*)"
+    ]
+  }
+}

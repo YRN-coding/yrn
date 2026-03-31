@@ -1,0 +1,314 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum KycTier {
+  TIER_0
+  TIER_1
+  TIER_2
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum WalletType {
+  SELF_CUSTODY
+  MANAGED
+  EXTERNAL
+}
+
+enum Network {
+  ETHEREUM
+  BITCOIN
+  BSC
+  SOLANA
+  XRP
+  POLYGON
+  BASE
+}
+
+enum AssetType {
+  CRYPTO
+  STOCK
+  ETF
+  FOREX
+  COMMODITY
+  RWA
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderType {
+  MARKET
+  LIMIT
+  STOP_LOSS
+}
+
+enum OrderStatus {
+  PENDING
+  OPEN
+  FILLED
+  PARTIAL
+  CANCELLED
+  FAILED
+}
+
+enum TransactionStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+}
+
+enum DocumentType {
+  NATIONAL_ID
+  PASSPORT
+  DRIVERS_LICENSE
+  PROOF_OF_ADDRESS
+}
+
+enum DocumentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum FlagSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum FlagStatus {
+  OPEN
+  REVIEWING
+  RESOLVED
+  DISMISSED
+}
+
+enum DepositMethod {
+  WIRE_TRANSFER
+  CRYPTO
+}
+
+enum DepositStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  phone         String?      @unique
+  passwordHash  String
+  totpSecret    String?
+  kycTier       KycTier      @default(TIER_0)
+  kycStatus     KycStatus    @default(PENDING)
+  isAdmin       Boolean      @default(false)
+  isActive      Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  wallets       Wallet[]
+  orders        Order[]
+  transactions  Transaction[]
+  sessions      Session[]
+  kycDocuments  KycDocument[]
+  complianceFlags ComplianceFlag[]
+  depositRequests DepositRequest[]
+
+  @@map("users")
+}
+
+model Session {
+  id            String   @id @default(uuid())
+  userId        String
+  refreshToken  String   @unique
+  userAgent     String?
+  ipAddress     String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Wallet {
+  id               String     @id @default(uuid())
+  userId           String
+  type             WalletType
+  network          Network
+  address          String     @unique
+  encryptedKeyRef  String?
+  isDefault        Boolean    @default(false)
+  createdAt        DateTime   @default(now())
+
+  user             User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  balances         Balance[]
+  sentTransactions Transaction[] @relation("FromWallet")
+  receivedTransactions Transaction[] @relation("ToWallet")
+
+  @@map("wallets")
+}
+
+model Asset {
+  id              String    @id @default(uuid())
+  symbol          String    @unique
+  name            String
+  type            AssetType
+  network         Network?
+  contractAddress String?
+  decimals        Int       @default(18)
+  coingeckoId     String?
+  logoUrl         String?
+  isActive        Boolean   @default(true)
+  rank            Int?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  balances        Balance[]
+  orders          Order[]
+  transactions    Transaction[]
+
+  @@map("assets")
+}
+
+model Balance {
+  id           String   @id @default(uuid())
+  walletId     String
+  assetId      String
+  amount       String   @default("0")
+  lastUsdValue Decimal  @default(0) @db.Decimal(18, 6)
+  updatedAt    DateTime @updatedAt
+
+  wallet       Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  asset        Asset    @relation(fields: [assetId], references: [id])
+
+  @@unique([walletId, assetId])
+  @@map("balances")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  assetId         String
+  side            OrderSide
+  type            OrderType
+  status          OrderStatus @default(PENDING)
+  quantity        String
+  filledQuantity  String      @default("0")
+  limitPrice      Decimal?    @db.Decimal(18, 8)
+  stopPrice       Decimal?    @db.Decimal(18, 8)
+  avgFillPrice    Decimal?    @db.Decimal(18, 8)
+  externalOrderId String?
+  network         Network?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user            User        @relation(fields: [userId], references: [id])
+  asset           Asset       @relation(fields: [assetId], references: [id])
+
+  @@map("orders")
+}
+
+model Transaction {
+  id            String            @id @default(uuid())
+  userId        String
+  fromWalletId  String
+  toWalletId    String?
+  assetId       String
+  amount        String
+  fee           String            @default("0")
+  status        TransactionStatus @default(PENDING)
+  txHash        String?           @unique
+  network       Network
+  blockNumber   Int?
+  confirmations Int               @default(0)
+  metadata      Json              @default("{}")
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  user          User              @relation(fields: [userId], references: [id])
+  fromWallet    Wallet            @relation("FromWallet", fields: [fromWalletId], references: [id])
+  toWallet      Wallet?           @relation("ToWallet", fields: [toWalletId], references: [id])
+  asset         Asset             @relation(fields: [assetId], references: [id])
+
+  @@map("transactions")
+}
+
+model KycDocument {
+  id           String         @id @default(uuid())
+  userId       String
+  type         DocumentType
+  status       DocumentStatus @default(PENDING)
+  providerRef  String?
+  data         Json           @default("{}")
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("kyc_documents")
+}
+
+model ComplianceFlag {
+  id            String     @id @default(uuid())
+  userId        String
+  transactionId String?
+  type          String
+  severity      FlagSeverity
+  status        FlagStatus @default(OPEN)
+  notes         String?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@map("compliance_flags")
+}
+
+model DepositRequest {
+  id            String        @id @default(uuid())
+  userId        String
+  method        DepositMethod
+  currency      String
+  amount        Decimal?      @db.Decimal(18, 8)
+  status        DepositStatus @default(PENDING)
+  proofUrl      String?
+  proofFileName String?
+  txHash        String?
+  adminNotes    String?
+  reviewedBy    String?
+  reviewedAt    DateTime?
+  metadata      Json          @default("{}")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  user          User          @relation(fields: [userId], references: [id])
+
+  @@map("deposit_requests")
+}
+
+model AppConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("app_config")
+}

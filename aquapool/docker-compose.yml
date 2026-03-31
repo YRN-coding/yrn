@@ -1,0 +1,115 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: aquapool-postgres
+    environment:
+      POSTGRES_DB: aquapool
+      POSTGRES_USER: aquapool
+      POSTGRES_PASSWORD: password
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U aquapool -d aquapool']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aquapool-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: aquapool-redis
+    ports:
+      - '6379:6379'
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - aquapool-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.7.0
+    container_name: aquapool-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - aquapool-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: aquapool-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - '9092:9092'
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
+      KAFKA_LOG_RETENTION_HOURS: 168
+    networks:
+      - aquapool-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: aquapool-kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - '8080:8080'
+    environment:
+      KAFKA_CLUSTERS_0_NAME: aquapool-local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    networks:
+      - aquapool-network
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: aquapool-prometheus
+    ports:
+      - '9090:9090'
+    volumes:
+      - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    networks:
+      - aquapool-network
+
+  grafana:
+    image: grafana/grafana:10.4.0
+    container_name: aquapool-grafana
+    ports:
+      - '3010:3000'
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: aquapool
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - aquapool-network
+
+volumes:
+  postgres-data:
+  redis-data:
+  grafana-data:
+
+networks:
+  aquapool-network:
+    driver: bridge

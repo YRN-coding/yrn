@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aquapool-config
+  namespace: aquapool
+data:
+  NODE_ENV: "production"
+  CORS_ORIGIN: "https://app.aquapool.io"
+  KAFKA_BROKERS: "kafka:9092"
+  REDIS_URL: "redis://redis:6379"
+  DATABASE_URL: "postgresql://aquapool:$(POSTGRES_PASSWORD)@postgres:5432/aquapool"
+  AUTH_SERVICE_PORT: "3001"
+  USER_SERVICE_PORT: "3002"
+  WALLET_SERVICE_PORT: "3003"
+  MARKET_DATA_SERVICE_PORT: "3004"
+  EXCHANGE_SERVICE_PORT: "3005"
+  REMITTANCE_SERVICE_PORT: "3006"
+  EARN_SERVICE_PORT: "3007"
+  COMPLIANCE_SERVICE_PORT: "3008"
+  NOTIFICATION_SERVICE_PORT: "3009"

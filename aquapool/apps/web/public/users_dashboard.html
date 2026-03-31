@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquapool — Users Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --bg-dark: #0A0F1E;
+            --bg-navy: #050D1A;
+            --bg-navy-mid: #0A1628;
+            --bg-navy-deep: #0F2040;
+            --bg-surface: #111827;
+            --bg-glass: rgba(10, 22, 40, 0.7);
+            --bg-glass-hover: rgba(10, 22, 40, 0.85);
+            --border-glass: rgba(186, 255, 57, 0.12);
+            --border-subtle: rgba(255, 255, 255, 0.05);
+            --lime: #BAFF39;
+            --lime-bright: #C6FF00;
+            --cyan: #00E5FF;
+            --violet: #6B48FF;
+            --blue: #0066FF;
+            --teal: #00D4AA;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+            --text-primary: #FFFFFF;
+            --text-secondary: rgba(255, 255, 255, 0.6);
+            --text-muted: #6B7280;
+            --offwhite: #F0F4FF;
+            --gap: 16px;
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                linear-gradient(135deg, #0A0F1E 0%, #0D1B3E 50%, #0A0F1E 100%);
+            z-index: -2;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(186, 255, 57, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(186, 255, 57, 0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            z-index: -1;
+        }
+
+        .dashboard-container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 20px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 0 0 1px rgba(186, 255, 57, 0.04), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--lime), var(--teal));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: var(--bg-dark);
+        }
+
+        .logo-text {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+
+        .logo-text span { color: var(--lime); }
+
+        .header-divider {
+            width: 1px;
+            height: 28px;
+            background: var(--border-subtle);
+        }
+
+        .header-title {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .filter-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select,
+        .filter-group input[type="date"] {
+            padding: 8px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-group select:hover,
+        .filter-group input[type="date"]:hover {
+            border-color: rgba(186, 255, 57, 0.3);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .filter-group select:focus,
+        .filter-group input[type="date"]:focus {
+            outline: none;
+            border-color: var(--lime);
+            box-shadow: 0 0 0 3px rgba(186, 255, 57, 0.1);
+        }
+
+        .filter-group select option {
+            background: var(--bg-navy-deep);
+            color: var(--text-primary);
+        }
+
+        /* KPI Cards */
+        .kpi-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: var(--gap);
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 22px 24px;
+            box-shadow: 0 0 0 1px rgba(186, 255, 57, 0.04), inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+
+        .kpi-card:nth-child(1)::before { background: linear-gradient(90deg, var(--lime), var(--teal)); }
+        .kpi-card:nth-child(2)::before { background: linear-gradient(90deg, var(--cyan), var(--blue)); }
+        .kpi-card:nth-child(3)::before { background: linear-gradient(90deg, var(--violet), var(--blue)); }
+        .kpi-card:nth-child(4)::before { background: linear-gradient(90deg, var(--warning), var(--error)); }
+
+        .kpi-card:hover {
+            transform: translateY(-2px);
+            border-color: rgba(186, 255, 57, 0.25);
+            box-shadow: 0 8px 32px rgba(186, 255, 57, 0.08);
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-bottom: 14px;
+        }
+
+        .kpi-card:nth-child(1) .kpi-icon { background: rgba(186, 255, 57, 0.1); }
+        .kpi-card:nth-child(2) .kpi-icon { background: rgba(0, 229, 255, 0.1); }
+        .kpi-card:nth-child(3) .kpi-icon { background: rgba(107, 72, 255, 0.1); }
+        .kpi-card:nth-child(4) .kpi-icon { background: rgba(245, 158, 11, 0.1); }
+
+        .kpi-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 6px;
+            background: linear-gradient(135deg, var(--text-primary), var(--offwhite));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .kpi-change {
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.positive { color: var(--success); }
+        .kpi-change.negative { color: var(--error); }
+
+        .kpi-sparkline {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 120px;
+            height: 50px;
+            opacity: 0.3;
+        }
+
+        /* Chart Section */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1.6fr 1fr;
+            gap: var(--gap);
+            margin-bottom: 24px;
+        }
+
+        .chart-row-equal {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: var(--gap);
+            margin-bottom: 24px;
+        }
+
+        .chart-container {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: 0 0 0 1px rgba(186, 255, 57, 0.04), inset 0 1px 0 rgba(255,255,255,0.05);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .chart-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .chart-badge {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(186, 255, 57, 0.1);
+            color: var(--lime);
+            border: 1px solid rgba(186, 255, 57, 0.2);
+        }
+
+        .chart-canvas-wrapper {
+            position: relative;
+            height: 280px;
+        }
+
+        .chart-canvas-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        /* Table Section */
+        .table-section {
+            background: var(--bg-glass);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: var(--radius);
+            box-shadow: 0 0 0 1px rgba(186, 255, 57, 0.04), inset 0 1px 0 rgba(255,255,255,0.05);
+            overflow: hidden;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .table-title {
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .table-search {
+            padding: 8px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+            font-size: 13px;
+            font-family: inherit;
+            width: 240px;
+            transition: all 0.2s;
+        }
+
+        .table-search::placeholder { color: var(--text-muted); }
+
+        .table-search:focus {
+            outline: none;
+            border-color: var(--lime);
+            box-shadow: 0 0 0 3px rgba(186, 255, 57, 0.1);
+        }
+
+        .table-scroll { overflow-x: auto; }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            white-space: nowrap;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.2s;
+        }
+
+        .data-table thead th:hover { color: var(--lime); }
+
+        .data-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            white-space: nowrap;
+        }
+
+        .data-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(186, 255, 57, 0.03);
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--bg-dark);
+            flex-shrink: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .user-email {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-badge.verified {
+            background: rgba(16, 185, 129, 0.12);
+            color: var(--success);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: var(--warning);
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
+        .status-badge.rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: var(--error);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .status-badge.inactive {
+            background: rgba(107, 114, 128, 0.12);
+            color: var(--text-muted);
+            border: 1px solid rgba(107, 114, 128, 0.2);
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .status-badge.verified .status-dot { background: var(--success); }
+        .status-badge.pending .status-dot { background: var(--warning); }
+        .status-badge.rejected .status-dot { background: var(--error); }
+        .status-badge.inactive .status-dot { background: var(--text-muted); }
+
+        .tier-badge {
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .tier-badge.gold {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.08));
+            color: #FCD34D;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .tier-badge.silver {
+            background: rgba(156, 163, 175, 0.15);
+            color: #D1D5DB;
+            border: 1px solid rgba(156, 163, 175, 0.25);
+        }
+
+        .tier-badge.bronze {
+            background: rgba(180, 130, 80, 0.15);
+            color: #D4A574;
+            border: 1px solid rgba(180, 130, 80, 0.25);
+        }
+
+        .tier-badge.platinum {
+            background: linear-gradient(135deg, rgba(186, 255, 57, 0.15), rgba(0, 212, 170, 0.1));
+            color: var(--lime);
+            border: 1px solid rgba(186, 255, 57, 0.25);
+        }
+
+        .table-pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 24px;
+            border-top: 1px solid var(--border-subtle);
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .pagination-buttons {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pagination-btn {
+            padding: 6px 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: rgba(186, 255, 57, 0.1);
+            border-color: rgba(186, 255, 57, 0.3);
+            color: var(--lime);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .pagination-btn.active {
+            background: rgba(186, 255, 57, 0.15);
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        /* Footer */
+        .dashboard-footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        .dashboard-footer span { color: var(--lime); font-weight: 600; }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .kpi-row { grid-template-columns: repeat(2, 1fr); }
+            .chart-row, .chart-row-equal { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-container { padding: 12px; }
+            .kpi-row { grid-template-columns: 1fr; }
+            .dashboard-header { flex-direction: column; align-items: flex-start; }
+            .filters { width: 100%; }
+            .table-search { width: 100%; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kpi-card, .chart-container, .table-section {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        .kpi-card:nth-child(1) { animation-delay: 0s; }
+        .kpi-card:nth-child(2) { animation-delay: 0.05s; }
+        .kpi-card:nth-child(3) { animation-delay: 0.1s; }
+        .kpi-card:nth-child(4) { animation-delay: 0.15s; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <div class="logo">
+                    <div class="logo-icon">A</div>
+                    <div class="logo-text">Aqua<span>pool</span></div>
+                </div>
+                <div class="header-divider"></div>
+                <div class="header-title">Users Dashboard</div>
+            </div>
+            <div class="filters">
+                <div class="filter-group">
+                    <label>Region</label>
+                    <select id="filter-region" onchange="dashboard.applyFilters()">
+                        <option value="all">All Regions</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>KYC</label>
+                    <select id="filter-kyc" onchange="dashboard.applyFilters()">
+                        <option value="all">All Status</option>
+                        <option value="verified">Verified</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Tier</label>
+                    <select id="filter-tier" onchange="dashboard.applyFilters()">
+                        <option value="all">All Tiers</option>
+                        <option value="platinum">Platinum</option>
+                        <option value="gold">Gold</option>
+                        <option value="silver">Silver</option>
+                        <option value="bronze">Bronze</option>
+                    </select>
+                </div>
+            </div>
+        </header>
+
+        <!-- KPI Cards -->
+        <section class="kpi-row">
+            <div class="kpi-card">
+                <div class="kpi-icon">&#128101;</div>
+                <div class="kpi-label">Total Users</div>
+                <div class="kpi-value" id="kpi-total">0</div>
+                <div class="kpi-change positive" id="kpi-total-change"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">&#9889;</div>
+                <div class="kpi-label">Active Users (30d)</div>
+                <div class="kpi-value" id="kpi-active">0</div>
+                <div class="kpi-change positive" id="kpi-active-change"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">&#128640;</div>
+                <div class="kpi-label">New Signups (30d)</div>
+                <div class="kpi-value" id="kpi-signups">0</div>
+                <div class="kpi-change positive" id="kpi-signups-change"></div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-icon">&#128737;</div>
+                <div class="kpi-label">KYC Verified Rate</div>
+                <div class="kpi-value" id="kpi-kyc">0%</div>
+                <div class="kpi-change positive" id="kpi-kyc-change"></div>
+            </div>
+        </section>
+
+        <!-- Charts Row 1 -->
+        <section class="chart-row">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">User Growth</div>
+                        <div class="chart-subtitle">Monthly new registrations & cumulative users</div>
+                    </div>
+                    <div class="chart-badge">+18.3% MoM</div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="growth-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Users by Region</div>
+                        <div class="chart-subtitle">Geographic distribution</div>
+                    </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="region-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 2 -->
+        <section class="chart-row-equal">
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">KYC Status Breakdown</div>
+                        <div class="chart-subtitle">Verification funnel</div>
+                    </div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="kyc-chart"></canvas>
+                </div>
+            </div>
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div>
+                        <div class="chart-title">Daily Active Users</div>
+                        <div class="chart-subtitle">Last 30 days</div>
+                    </div>
+                    <div class="chart-badge">Avg: 3.2K</div>
+                </div>
+                <div class="chart-canvas-wrapper">
+                    <canvas id="dau-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Users Table -->
+        <section class="table-section">
+            <div class="table-header">
+                <div class="table-title">Recent Users</div>
+                <input type="text" class="table-search" id="table-search" placeholder="Search users..." oninput="dashboard.searchTable(this.value)">
+            </div>
+            <div class="table-scroll">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th onclick="dashboard.sortTable('name')">User</th>
+                            <th onclick="dashboard.sortTable('region')">Region</th>
+                            <th onclick="dashboard.sortTable('kyc')">KYC Status</th>
+                            <th onclick="dashboard.sortTable('tier')">Tier</th>
+                            <th onclick="dashboard.sortTable('balance')">Portfolio</th>
+                            <th onclick="dashboard.sortTable('joined')">Joined</th>
+                            <th onclick="dashboard.sortTable('lastActive')">Last Active</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-tbody"></tbody>
+                </table>
+            </div>
+            <div class="table-pagination">
+                <div id="pagination-info">Showing 1-20 of 200</div>
+                <div class="pagination-buttons" id="pagination-buttons"></div>
+            </div>
+        </section>
+
+        <footer class="dashboard-footer">
+            Data as of <span>March 30, 2026</span> &middot; Sample data for demonstration &middot; Powered by <span>Aquapool</span>
+        </footer>
+    </div>
+
+    <script>
+        // ─── Color Palette ───
+        const COLORS = {
+            lime: '#BAFF39',
+            cyan: '#00E5FF',
+            violet: '#6B48FF',
+            blue: '#0066FF',
+            teal: '#00D4AA',
+            success: '#10B981',
+            warning: '#F59E0B',
+            error: '#EF4444',
+            muted: '#6B7280',
+        };
+
+        const CHART_COLORS = [COLORS.lime, COLORS.cyan, COLORS.violet, COLORS.blue, COLORS.teal, COLORS.warning];
+
+        // ─── Chart.js Global Defaults ───
+        Chart.defaults.color = 'rgba(255,255,255,0.5)';
+        Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+        Chart.defaults.plugins.legend.labels.padding = 16;
+
+        // ─── Sample Data ───
+        const REGIONS = ['Africa', 'Southeast Asia', 'South America', 'Middle East', 'South Asia', 'Europe', 'North America'];
+        const TIERS = ['platinum', 'gold', 'silver', 'bronze'];
+        const KYC_STATUSES = ['verified', 'pending', 'rejected'];
+
+        const FIRST_NAMES = ['Amara','Kai','Lina','Omar','Sofia','Yuki','Zara','Ravi','Elena','Kwame','Mei','Aisha','Carlos','Fatima','Jin','Priya','Diego','Nia','Hassan','Sakura','Tariq','Ines','Kofi','Linh','Dmitri','Aaliya','Chen','Mariam','Sven','Adaeze','Paulo','Hana','Ibrahim','Nadia','Tao','Esperanza','Jelani','Suki','Andrei','Chioma','Mateo','Ayumi','Rashid','Valentina','Kenzo','Amira','Felix','Leila','Oscar','Rania','Hiroshi','Celine','Emeka','Yara','Marco','Aiko','Jamal','Isla','Vikram','Lena'];
+        const LAST_NAMES = ['Okafor','Nakamura','Santos','Al-Rashid','Petrov','Kim','Andersen','Patel','Moreau','Mensah','Zhang','Hassan','Rivera','Johansson','Nguyen','Sharma','Costa','Osei','Ivanov','Tanaka','Muller','Abadi','Fernandez','Eriksson','Chen','Diallo','Park','Mukherjee','Silva','Larsson','Yamamoto','Nkosi','Garcia','Jansen','Ali','Popov','Suzuki','Adekunle','Martinez','Sato','Owusu','Lee','Volkov','Hayashi','Bello','Takahashi','Afolabi','Hernandez','Watanabe','Chakraborty'];
+
+        function generateUsers(count) {
+            const users = [];
+            const now = new Date('2026-03-30');
+            for (let i = 0; i < count; i++) {
+                const first = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
+                const last = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+                const joinedDaysAgo = Math.floor(Math.random() * 365);
+                const joined = new Date(now - joinedDaysAgo * 86400000);
+                const lastActiveDaysAgo = Math.floor(Math.random() * Math.min(joinedDaysAgo, 30));
+                const lastActive = new Date(now - lastActiveDaysAgo * 86400000);
+                const isActive = lastActiveDaysAgo < 30;
+                const regionWeights = [0.28, 0.22, 0.18, 0.12, 0.10, 0.06, 0.04];
+                let r = Math.random(), cumul = 0, regionIdx = 0;
+                for (let j = 0; j < regionWeights.length; j++) {
+                    cumul += regionWeights[j];
+                    if (r <= cumul) { regionIdx = j; break; }
+                }
+
+                const kycR = Math.random();
+                const kyc = kycR < 0.68 ? 'verified' : kycR < 0.88 ? 'pending' : 'rejected';
+
+                const tierR = Math.random();
+                const tier = tierR < 0.05 ? 'platinum' : tierR < 0.20 ? 'gold' : tierR < 0.55 ? 'silver' : 'bronze';
+
+                const balanceBase = tier === 'platinum' ? 50000 : tier === 'gold' ? 15000 : tier === 'silver' ? 3000 : 500;
+                const balance = Math.round(balanceBase + Math.random() * balanceBase * 1.5);
+
+                users.push({
+                    id: i + 1,
+                    name: `${first} ${last}`,
+                    email: `${first.toLowerCase()}.${last.toLowerCase()}@email.com`,
+                    region: REGIONS[regionIdx],
+                    kyc,
+                    tier,
+                    balance,
+                    joined: joined.toISOString().split('T')[0],
+                    lastActive: lastActive.toISOString().split('T')[0],
+                    isActive,
+                    joinedMonth: `${joined.getFullYear()}-${String(joined.getMonth() + 1).padStart(2, '0')}`,
+                });
+            }
+            return users;
+        }
+
+        const USERS = generateUsers(500);
+
+        // Monthly growth data
+        const MONTHS = ['Apr 25','May 25','Jun 25','Jul 25','Aug 25','Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26'];
+        const MONTHLY_SIGNUPS = [18, 24, 31, 38, 42, 48, 55, 62, 71, 78, 85, 98];
+        const CUMULATIVE = MONTHLY_SIGNUPS.reduce((acc, val) => {
+            acc.push((acc.length ? acc[acc.length - 1] : 0) + val);
+            return acc;
+        }, []).map(v => v + 150);
+
+        // DAU data (last 30 days)
+        const DAU_LABELS = [];
+        const DAU_DATA = [];
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date('2026-03-30');
+            d.setDate(d.getDate() - i);
+            DAU_LABELS.push(`${d.getMonth() + 1}/${d.getDate()}`);
+            const base = 2800 + Math.sin(i * 0.5) * 400;
+            const weekday = d.getDay();
+            const weekendDip = (weekday === 0 || weekday === 6) ? -600 : 0;
+            DAU_DATA.push(Math.round(base + weekendDip + (Math.random() - 0.3) * 500));
+        }
+
+        // ─── Format Helpers ───
+        function fmt(value, format) {
+            if (format === 'currency') {
+                if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+                if (value >= 1e3) return `$${(value / 1e3).toFixed(1)}K`;
+                return `$${value.toFixed(0)}`;
+            }
+            if (format === 'percent') return `${value.toFixed(1)}%`;
+            if (value >= 1e6) return `${(value / 1e6).toFixed(1)}M`;
+            if (value >= 1e3) return `${(value / 1e3).toFixed(1)}K`;
+            return value.toLocaleString();
+        }
+
+        function avatarColor(name) {
+            const colors = [COLORS.lime, COLORS.cyan, COLORS.violet, COLORS.teal, COLORS.blue, COLORS.warning];
+            let hash = 0;
+            for (const ch of name) hash = ch.charCodeAt(0) + ((hash << 5) - hash);
+            return colors[Math.abs(hash) % colors.length];
+        }
+
+        function initials(name) {
+            return name.split(' ').map(n => n[0]).join('').toUpperCase();
+        }
+
+        // ─── Dashboard Class ───
+        class Dashboard {
+            constructor(data) {
+                this.rawData = data;
+                this.filteredData = data;
+                this.charts = {};
+                this.sortCol = 'joined';
+                this.sortDir = 'desc';
+                this.page = 0;
+                this.pageSize = 20;
+                this.searchQuery = '';
+                this.init();
+            }
+
+            init() {
+                this.populateFilters();
+                this.renderKPIs();
+                this.renderCharts();
+                this.renderTable();
+            }
+
+            populateFilters() {
+                const regionSelect = document.getElementById('filter-region');
+                REGIONS.forEach(r => {
+                    const opt = document.createElement('option');
+                    opt.value = r;
+                    opt.textContent = r;
+                    regionSelect.appendChild(opt);
+                });
+            }
+
+            applyFilters() {
+                const region = document.getElementById('filter-region').value;
+                const kyc = document.getElementById('filter-kyc').value;
+                const tier = document.getElementById('filter-tier').value;
+
+                this.filteredData = this.rawData.filter(u => {
+                    if (region !== 'all' && u.region !== region) return false;
+                    if (kyc !== 'all' && u.kyc !== kyc) return false;
+                    if (tier !== 'all' && u.tier !== tier) return false;
+                    return true;
+                });
+
+                this.page = 0;
+                this.renderKPIs();
+                this.updateCharts();
+                this.renderTable();
+            }
+
+            renderKPIs() {
+                const d = this.filteredData;
+                const total = d.length;
+                const active = d.filter(u => u.isActive).length;
+                const recent = d.filter(u => {
+                    const diff = (new Date('2026-03-30') - new Date(u.joined)) / 86400000;
+                    return diff <= 30;
+                }).length;
+                const verified = d.filter(u => u.kyc === 'verified').length;
+                const kycRate = total > 0 ? (verified / total) * 100 : 0;
+
+                document.getElementById('kpi-total').textContent = fmt(total, 'number');
+                document.getElementById('kpi-active').textContent = fmt(active, 'number');
+                document.getElementById('kpi-signups').textContent = fmt(recent, 'number');
+                document.getElementById('kpi-kyc').textContent = kycRate.toFixed(1) + '%';
+
+                document.getElementById('kpi-total-change').innerHTML = '<span>&#9650;</span> +12.4% vs last month';
+                document.getElementById('kpi-active-change').innerHTML = '<span>&#9650;</span> +8.2% vs last month';
+                document.getElementById('kpi-signups-change').innerHTML = '<span>&#9650;</span> +18.3% vs last month';
+
+                const kycEl = document.getElementById('kpi-kyc-change');
+                if (kycRate > 65) {
+                    kycEl.className = 'kpi-change positive';
+                    kycEl.innerHTML = '<span>&#9650;</span> +3.1% vs last month';
+                } else {
+                    kycEl.className = 'kpi-change negative';
+                    kycEl.innerHTML = '<span>&#9660;</span> -2.1% vs last month';
+                }
+            }
+
+            renderCharts() {
+                this.renderGrowthChart();
+                this.renderRegionChart();
+                this.renderKYCChart();
+                this.renderDAUChart();
+            }
+
+            renderGrowthChart() {
+                const ctx = document.getElementById('growth-chart').getContext('2d');
+                this.charts.growth = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: MONTHS,
+                        datasets: [
+                            {
+                                label: 'New Signups',
+                                data: MONTHLY_SIGNUPS,
+                                backgroundColor: COLORS.lime + '40',
+                                borderColor: COLORS.lime,
+                                borderWidth: 2,
+                                borderRadius: 6,
+                                order: 2,
+                            },
+                            {
+                                label: 'Cumulative Users',
+                                data: CUMULATIVE,
+                                type: 'line',
+                                borderColor: COLORS.cyan,
+                                backgroundColor: COLORS.cyan + '10',
+                                borderWidth: 2.5,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: 0,
+                                pointHoverRadius: 5,
+                                pointHoverBackgroundColor: COLORS.cyan,
+                                yAxisID: 'y1',
+                                order: 1,
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: { mode: 'index', intersect: false },
+                        plugins: {
+                            legend: { position: 'top' },
+                            tooltip: {
+                                backgroundColor: 'rgba(10, 15, 30, 0.95)',
+                                borderColor: 'rgba(186, 255, 57, 0.2)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false } },
+                            y: {
+                                beginAtZero: true,
+                                title: { display: true, text: 'New Signups', color: COLORS.lime + '80' },
+                                ticks: { callback: v => fmt(v, 'number') }
+                            },
+                            y1: {
+                                position: 'right',
+                                beginAtZero: true,
+                                title: { display: true, text: 'Cumulative', color: COLORS.cyan + '80' },
+                                grid: { drawOnChartArea: false },
+                                ticks: { callback: v => fmt(v, 'number') }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderRegionChart() {
+                const regionCounts = {};
+                this.filteredData.forEach(u => {
+                    regionCounts[u.region] = (regionCounts[u.region] || 0) + 1;
+                });
+                const labels = Object.keys(regionCounts).sort((a, b) => regionCounts[b] - regionCounts[a]);
+                const data = labels.map(l => regionCounts[l]);
+
+                const ctx = document.getElementById('region-chart').getContext('2d');
+                this.charts.region = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels,
+                        datasets: [{
+                            data,
+                            backgroundColor: CHART_COLORS.map(c => c + 'CC'),
+                            borderColor: 'rgba(10, 15, 30, 0.8)',
+                            borderWidth: 3,
+                            hoverOffset: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '62%',
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { padding: 12, font: { size: 12 } }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(10, 15, 30, 0.95)',
+                                borderColor: 'rgba(186, 255, 57, 0.2)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: ctx => {
+                                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                        const pct = ((ctx.parsed / total) * 100).toFixed(1);
+                                        return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderKYCChart() {
+                const kycCounts = { verified: 0, pending: 0, rejected: 0 };
+                this.filteredData.forEach(u => kycCounts[u.kyc]++);
+
+                const ctx = document.getElementById('kyc-chart').getContext('2d');
+                this.charts.kyc = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Verified', 'Pending', 'Rejected'],
+                        datasets: [{
+                            data: [kycCounts.verified, kycCounts.pending, kycCounts.rejected],
+                            backgroundColor: [COLORS.success + 'CC', COLORS.warning + 'CC', COLORS.error + 'CC'],
+                            borderColor: [COLORS.success, COLORS.warning, COLORS.error],
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            barPercentage: 0.5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(10, 15, 30, 0.95)',
+                                borderColor: 'rgba(186, 255, 57, 0.2)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                            }
+                        },
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: { callback: v => fmt(v, 'number') }
+                            },
+                            y: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            renderDAUChart() {
+                const ctx = document.getElementById('dau-chart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+                gradient.addColorStop(0, COLORS.violet + '40');
+                gradient.addColorStop(1, COLORS.violet + '00');
+
+                this.charts.dau = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: DAU_LABELS,
+                        datasets: [{
+                            label: 'DAU',
+                            data: DAU_DATA,
+                            borderColor: COLORS.violet,
+                            backgroundColor: gradient,
+                            borderWidth: 2.5,
+                            fill: true,
+                            tension: 0.35,
+                            pointRadius: 0,
+                            pointHoverRadius: 5,
+                            pointHoverBackgroundColor: COLORS.violet,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(10, 15, 30, 0.95)',
+                                borderColor: 'rgba(107, 72, 255, 0.3)',
+                                borderWidth: 1,
+                                padding: 12,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: ctx => ` DAU: ${ctx.parsed.y.toLocaleString()}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { maxTicksLimit: 10 } },
+                            y: {
+                                beginAtZero: false,
+                                ticks: { callback: v => fmt(v, 'number') }
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateCharts() {
+                // Region chart
+                const regionCounts = {};
+                this.filteredData.forEach(u => regionCounts[u.region] = (regionCounts[u.region] || 0) + 1);
+                const labels = Object.keys(regionCounts).sort((a, b) => regionCounts[b] - regionCounts[a]);
+                this.charts.region.data.labels = labels;
+                this.charts.region.data.datasets[0].data = labels.map(l => regionCounts[l]);
+                this.charts.region.update('none');
+
+                // KYC chart
+                const kycCounts = { verified: 0, pending: 0, rejected: 0 };
+                this.filteredData.forEach(u => kycCounts[u.kyc]++);
+                this.charts.kyc.data.datasets[0].data = [kycCounts.verified, kycCounts.pending, kycCounts.rejected];
+                this.charts.kyc.update('none');
+            }
+
+            getTableData() {
+                let data = [...this.filteredData];
+
+                if (this.searchQuery) {
+                    const q = this.searchQuery.toLowerCase();
+                    data = data.filter(u =>
+                        u.name.toLowerCase().includes(q) ||
+                        u.email.toLowerCase().includes(q) ||
+                        u.region.toLowerCase().includes(q)
+                    );
+                }
+
+                data.sort((a, b) => {
+                    let aVal = a[this.sortCol];
+                    let bVal = b[this.sortCol];
+                    if (typeof aVal === 'string') aVal = aVal.toLowerCase();
+                    if (typeof bVal === 'string') bVal = bVal.toLowerCase();
+                    const cmp = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+                    return this.sortDir === 'asc' ? cmp : -cmp;
+                });
+
+                return data;
+            }
+
+            renderTable() {
+                const data = this.getTableData();
+                const start = this.page * this.pageSize;
+                const end = Math.min(start + this.pageSize, data.length);
+                const pageData = data.slice(start, end);
+
+                const tbody = document.getElementById('users-tbody');
+                tbody.innerHTML = pageData.map(u => `
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar" style="background:${avatarColor(u.name)}22;color:${avatarColor(u.name)}">${initials(u.name)}</div>
+                                <div>
+                                    <div class="user-name">${u.name}</div>
+                                    <div class="user-email">${u.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${u.region}</td>
+                        <td><span class="status-badge ${u.kyc}"><span class="status-dot"></span>${u.kyc.charAt(0).toUpperCase() + u.kyc.slice(1)}</span></td>
+                        <td><span class="tier-badge ${u.tier}">${u.tier.charAt(0).toUpperCase() + u.tier.slice(1)}</span></td>
+                        <td style="font-weight:600;font-variant-numeric:tabular-nums">${fmt(u.balance, 'currency')}</td>
+                        <td style="color:var(--text-secondary)">${u.joined}</td>
+                        <td style="color:var(--text-secondary)">${u.lastActive}</td>
+                    </tr>
+                `).join('');
+
+                // Pagination
+                const totalPages = Math.ceil(data.length / this.pageSize);
+                document.getElementById('pagination-info').textContent =
+                    `Showing ${data.length ? start + 1 : 0}-${end} of ${data.length}`;
+
+                const btnsEl = document.getElementById('pagination-buttons');
+                let btnsHtml = `<button class="pagination-btn" onclick="dashboard.goPage(${this.page - 1})" ${this.page === 0 ? 'disabled' : ''}>&laquo; Prev</button>`;
+                const maxBtns = 5;
+                let startPage = Math.max(0, this.page - Math.floor(maxBtns / 2));
+                let endPage = Math.min(totalPages, startPage + maxBtns);
+                if (endPage - startPage < maxBtns) startPage = Math.max(0, endPage - maxBtns);
+
+                for (let i = startPage; i < endPage; i++) {
+                    btnsHtml += `<button class="pagination-btn ${i === this.page ? 'active' : ''}" onclick="dashboard.goPage(${i})">${i + 1}</button>`;
+                }
+                btnsHtml += `<button class="pagination-btn" onclick="dashboard.goPage(${this.page + 1})" ${this.page >= totalPages - 1 ? 'disabled' : ''}>Next &raquo;</button>`;
+                btnsEl.innerHTML = btnsHtml;
+            }
+
+            sortTable(col) {
+                if (this.sortCol === col) {
+                    this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    this.sortCol = col;
+                    this.sortDir = 'desc';
+                }
+                this.renderTable();
+            }
+
+            searchTable(query) {
+                this.searchQuery = query;
+                this.page = 0;
+                this.renderTable();
+            }
+
+            goPage(p) {
+                const data = this.getTableData();
+                const totalPages = Math.ceil(data.length / this.pageSize);
+                if (p >= 0 && p < totalPages) {
+                    this.page = p;
+                    this.renderTable();
+                }
+            }
+        }
+
+        const dashboard = new Dashboard(USERS);
+    </script>
+</body>
+</html>

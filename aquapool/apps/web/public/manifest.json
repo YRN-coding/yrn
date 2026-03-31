@@ -1,0 +1,37 @@
+{
+  "name": "Aquapool — Your Global Finance Hub",
+  "short_name": "Aquapool",
+  "description": "Access crypto, stocks, DeFi, and global remittance in one secure platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050D1A",
+  "theme_color": "#BAFF39",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["finance", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Send Money",
+      "url": "/send",
+      "description": "Send money globally"
+    },
+    {
+      "name": "Markets",
+      "url": "/markets",
+      "description": "View live markets"
+    }
+  ]
+}
